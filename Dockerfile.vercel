@@ -1,0 +1,50 @@
+
+# Step 1: Build frontend assets
+FROM node:20-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+
+# Step 2: Prepare Laravel and run the web server
+FROM dunglas/frankenphp:1-php8.4
+
+WORKDIR /app
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Install PHP extensions required by Laravel and Neon PostgreSQL
+RUN install-php-extensions \
+    pdo_pgsql \
+    pgsql \
+    mbstring \
+    curl \
+    xml \
+    zip \
+    gd \
+    intl \
+    bcmath
+
+# Copy Laravel application
+COPY . .
+
+# Copy the built frontend assets
+COPY --from=frontend /app/public/build ./public/build
+
+# Install production PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Allow Laravel to write cache and storage files
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+ENV SERVER_NAME=:80
+
+EXPOSE 80
+
+CMD ["frankenphp", "php-server", "-r", "public"]

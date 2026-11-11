@@ -2,22 +2,21 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('reviews', function (Blueprint $table) {
-            $table->unsignedTinyInteger('rating')->nullable()->change();
-        });
+        DB::statement(
+            'ALTER TABLE reviews ALTER COLUMN rating DROP NOT NULL'
+        );
     }
 
     public function down(): void
     {
-        Schema::table('reviews', function (Blueprint $table) {
-            $table->unsignedTinyInteger('rating')->nullable(false)->change();
-        });
+        DB::statement(
+            'ALTER TABLE reviews ALTER COLUMN rating SET NOT NULL'
+        );
     }
 };
