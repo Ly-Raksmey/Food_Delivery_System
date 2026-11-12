@@ -160,3 +160,17 @@ Route::middleware(['auth', 'delivery'])->prefix('delivery')->name('delivery.')->
     Route::get('/profile', [ProfileController::class, 'deliveryProfile'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'deliveryProfileUpdate'])->name('profile.update');
 });
+
+Route::get('/debug-db', function () {
+    $url = env('DATABASE_URL');
+    $host = parse_url($url, PHP_URL_HOST);
+    $start = microtime(true);
+    $sock = @fsockopen($host, 5432, $errno, $errstr, 5);
+    return [
+        'host' => $host,
+        'options' => parse_url($url, PHP_URL_QUERY),
+        'can_reach_neon' => (bool) $sock,
+        'error' => $errstr,
+        'seconds' => round(microtime(true) - $start, 2),
+    ];
+});
